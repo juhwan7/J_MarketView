@@ -1,0 +1,39 @@
+name: Morning Market Briefing
+
+on:
+  schedule:
+    # 한국 시간(KST) 오전 8시 40분은 UTC 시간으로 전날 오후 11시 40분입니다.
+    - cron: '40 23 * * *'
+  workflow_dispatch: # 수동으로도 실행할 수 있게 버튼 생성
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # sent_dates.txt 파일을 업데이트하기 위한 권한
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install Dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run Script
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          CHAT_ID: ${{ secrets.CHAT_ID }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: python main.py
+
+      - name: Commit and Push sent_dates.txt
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add sent_dates.txt
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Update sent dates" && git push)
