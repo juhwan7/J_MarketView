@@ -47,7 +47,8 @@ def get_reports_by_category(category_name, url_path):
     reports_data = []
     
     today = datetime.datetime.now()
-    seven_days_ago = today - datetime.timedelta(days=7)
+    # 💡 수정됨: 최근 7일에서 '최근 2일'로 변경
+    two_days_ago = today - datetime.timedelta(days=2)
     
     for page in range(1, 10): # 탐색 페이지 수 10페이지로 최적화
         url = f"https://finance.naver.com/research/{url_path}?page={page}"
@@ -71,7 +72,8 @@ def get_reports_by_category(category_name, url_path):
                     date_str = tds[d_idx].text.strip()
                     try:
                         report_date = datetime.datetime.strptime(date_str, '%y.%m.%d')
-                        if report_date < seven_days_ago:
+                        # 💡 수정됨: 2일 이전 데이터가 나오면 탐색 즉시 중단
+                        if report_date < two_days_ago:
                             return reports_data
                     except:
                         continue
@@ -240,7 +242,9 @@ async def main():
                         sent_urls.add(rep['link'])
                 
                 print(f"✅ [{target_date}] {category_name} 브리핑 전송 완료!")
-                await asyncio.sleep(20) # 도배 방지용 약간의 대기
+                
+                # 💡 수정됨: 발송 간 대기 시간을 20초에서 5초로 대폭 단축 (텔레그램 API 리밋 방지 최소 시간)
+                await asyncio.sleep(5) 
                 
             except Exception as e:
                 print(f"❌ 전송 실패: {e}")
