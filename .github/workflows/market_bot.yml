@@ -5,7 +5,7 @@ on:
     branches:
       - main  # 본인의 기본 브랜치 이름이 master라면 master로 변경하세요.
   schedule:
-    - cron: '20 23 * * *'  # 한국 시간 오전 8시 20분
+    - cron: '00 23 * * *'  # 한국 시간 오전 8시 00분
     - cron: '00 6 * * *'   # 한국 시간 오후 3시 00분
   workflow_dispatch:
 
