@@ -3,10 +3,11 @@ name: Market Briefing Bot
 on:
   push:
     branches:
-      - main  # 본인의 기본 브랜치 이름이 master라면 master로 변경하세요.
+      - main
   schedule:
-    - cron: '20 23 * * *'  # 한국 시간 오전 8시 20분
-    - cron: '00 6 * * *'   # 한국 시간 오후 3시 00분
+    # 매 30분마다 실행 (UTC 21:00은 한국 시간 오전 06:00입니다)
+    # 하루 종일 30분 간격으로 작동하게 하려면 아래와 같이 설정합니다.
+    - cron: '0,30 * * * *' 
   workflow_dispatch:
 
 jobs:

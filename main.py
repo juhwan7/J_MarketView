@@ -1,3 +1,4 @@
+import hashlib
 import warnings
 warnings.filterwarnings("ignore", category=FutureWarning)
 import requests
@@ -12,6 +13,7 @@ import pdfplumber
 from io import BytesIO
 import datetime 
 from collections import defaultdict 
+import difflib # 유사도 분석을 위한 라이브러리 추가
 
 # ==============================================================================
 # 1. 설정 (GitHub Secrets 활용)
@@ -23,7 +25,8 @@ GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 bot = Bot(token=TELEGRAM_TOKEN)
 genai.configure(api_key=GEMINI_API_KEY)
 model = genai.GenerativeModel('gemini-3.1-flash-lite-preview')
-RECORD_FILE = 'sent_urls.txt' # 개별 URL을 저장하여 새 리포트만 식별합니다.
+RECORD_FILE = 'sent_urls.txt' 
+TITLE_RECORD_FILE = 'sent_titles.txt' # 제목 기반 유사도 중복 검사를 위한 파일 추가
 
 # ==============================================================================
 # 2. 데이터 수집 함수
@@ -47,10 +50,10 @@ def get_reports_by_category(category_name, url_path):
     reports_data = []
     
     today = datetime.datetime.now()
-    # 💡 수정됨: 최근 7일에서 '최근 2일'로 변경
-    two_days_ago = today - datetime.timedelta(days=2)
+    # 💡 최대 2일 전 자정(00시 00분)으로 기준점 설정 (예: 4월 3일 -> 4월 1일 00:00)
+    two_days_ago = (today - datetime.timedelta(days=2)).replace(hour=0, minute=0, second=0, microsecond=0)
     
-    for page in range(1, 10): # 탐색 페이지 수 10페이지로 최적화
+    for page in range(1, 10): 
         url = f"https://finance.naver.com/research/{url_path}?page={page}"
         try:
             response = requests.get(url, headers=headers, timeout=10)
@@ -71,8 +74,9 @@ def get_reports_by_category(category_name, url_path):
                         
                     date_str = tds[d_idx].text.strip()
                     try:
+                        # 날짜 파싱 (YY.MM.DD 포맷)
                         report_date = datetime.datetime.strptime(date_str, '%y.%m.%d')
-                        # 💡 수정됨: 2일 이전 데이터가 나오면 탐색 즉시 중단
+                        # 💡 2일 전(two_days_ago)보다 과거 데이터면 수집 즉시 중단
                         if report_date < two_days_ago:
                             return reports_data
                     except:
@@ -119,19 +123,20 @@ async def analyze_daily_category_reports(target_date, category_name, report_list
             content_snippet = content[:2500] 
             combined_text += f"\n\n[제목: {rep['title']} (증권사: {rep['broker']})]\n내용: {content_snippet}"
 
+        # 💡 중복 내용을 하나로 묶고 필터링하도록 프롬프트 강력하게 수정
         system_prompt = (
             f"당신은 상위 1% 주식 투자자를 위한 전문 애널리스트입니다. "
-            f"다음은 '{target_date}'에 신규 발행된 [{category_name}] 섹터의 리포트 모음입니다. "
-            f"내용을 단순 나열하지 말고, 전체 흐름을 관통하는 핵심을 짚어주되 증권사들이 제시한 '구체적인 근거, 수치, 심화 논리'를 반드시 포함하여 작성하세요."
+            f"다음은 '{target_date}'에 수집된 [{category_name}] 섹터의 신규 리포트 모음입니다. "
+            f"여러 증권사에서 동일한 기업이나 유사한 주제를 다룬 경우, 절대 중복해서 나열하지 말고 '하나의 주제'로 묶어서 요약하세요."
         )
 
         prompt = f"""
         {system_prompt}
         
         [🚨 지침]
-        1. 본문에 없는 내용은 절대 지어내지 마세요.
-        2. '간단명료하지만 깊이 있게' 작성하세요. (초보자도 읽기 쉽지만, 전문적인 인사이트가 담겨야 함)
-        3. 각 리포트에서 주장하는 핵심 근거(왜 오를 것인가/내릴 것인가)와 중요 목표가, 수치 데이터를 꼭 살려주세요.
+        1. 본문에 없는 내용은 지어내지 마세요.
+        2. '간단명료하지만 깊이 있게' 작성하세요. (목표가, 영업이익률 등 수치 데이터 필수)
+        3. 💡 중복 처리: 여러 리포트가 비슷한 내용(예: 삼성전자 호실적)을 말한다면, 각 증권사의 의견을 한 항목 안에 종합하여 서술하고 개별적으로 중복 나열하지 마세요.
         
         [오늘 수집된 {category_name} 본문 모음] 
         {combined_text}
@@ -144,13 +149,13 @@ async def analyze_daily_category_reports(target_date, category_name, report_list
         (이 섹터 리포트들을 관통하는 가장 중요한 메시지 2~3줄)
         
         <b>🔍 [주요 리포트 심층 분석]</b>
-        (가장 중요하거나 눈에 띄는 리포트 2~4개를 선정하여 아래 양식으로 각각 깊이 있게 분석)
-        - <b>(종목명 또는 주제)</b> : (증권사명)
-          • 핵심 논리 : (왜 좋게/나쁘게 보는지 구체적 이유)
-          • 중요 수치/전망 : (목표가, 영업이익률 변화, 핵심 데이터 등)
+        (가장 중요하거나 눈에 띄는 리포트들을 선정, 비슷한 주제는 하나로 묶어서 분석)
+        - <b>(종목명 또는 핵심 주제)</b> : (관련 증권사명 모두 기재)
+          • 핵심 논리 : (왜 좋게/나쁘게 보는지 구체적 이유 종합)
+          • 중요 수치/전망 : (목표가 등 핵심 데이터)
           
         <b>💡 [실전 투자 적용 포인트]</b>
-        (이 섹터의 내용을 바탕으로 단기/스윙 투자자가 어떤 스탠스를 취해야 하는지 현실적인 조언)
+        (단기/스윙 투자 스탠스 조언)
         """
         
         response = await asyncio.to_thread(model.generate_content, prompt)
@@ -178,6 +183,14 @@ async def analyze_daily_category_reports(target_date, category_name, report_list
 # ==============================================================================
 # 4. 메인 실행 루틴
 # ==============================================================================
+def is_similar_title(new_title, sent_titles_list, threshold=0.7):
+    """새로운 제목이 이미 보낸 제목 리스트와 유사도가 높은지 판별"""
+    for old_title in sent_titles_list:
+        similarity = difflib.SequenceMatcher(None, new_title, old_title).ratio()
+        if similarity > threshold:
+            return True
+    return False
+
 async def main():
     categories = [
         ('🌍 경제분석', 'economy_list.naver'),
@@ -189,12 +202,17 @@ async def main():
     
     print("🚀 [J_MarketView PRO] 신규 리포트 수집 및 요약을 시작합니다.")
 
+    # 파일 초기화
     if not os.path.exists(RECORD_FILE):
         open(RECORD_FILE, 'w', encoding='utf-8').close()
+    if not os.path.exists(TITLE_RECORD_FILE):
+        open(TITLE_RECORD_FILE, 'w', encoding='utf-8').close()
     
-    # 이미 전송한 리포트 URL 불러오기
+    # 이미 전송한 리포트 URL & 제목 불러오기
     with open(RECORD_FILE, 'r', encoding='utf-8') as f:
         sent_urls = set(line.strip() for line in f if line.strip())
+    with open(TITLE_RECORD_FILE, 'r', encoding='utf-8') as f:
+        sent_titles = set(line.strip() for line in f if line.strip())
 
     all_reports = []
     for cat_name, url_path in categories:
@@ -202,14 +220,25 @@ async def main():
         reports = get_reports_by_category(cat_name, url_path)
         all_reports.extend(reports)
         
-    # 새로운 리포트만 필터링
-    new_reports = [rep for rep in all_reports if rep['link'] not in sent_urls]
+    # 새로운 리포트만 필터링 (URL 중복 제거 및 제목 유사도 제거)
+    new_reports = []
+    for rep in all_reports:
+        if rep['link'] in sent_urls:
+            continue
+        # 이미 전송된 제목과 70% 이상 일치하면 제외 (중복 방지)
+        if is_similar_title(rep['title'], sent_titles):
+            print(f"🔄 중복/유사 제목 제외: {rep['title']}")
+            # URL만 기록해두어 다음 실행 시 불필요한 연산 방지
+            sent_urls.add(rep['link']) 
+            continue
+            
+        new_reports.append(rep)
 
     if not new_reports:
         print("📭 새로 추가된 리포트가 없습니다. 실행을 종료합니다.")
         return
 
-    # 날짜별 -> 섹터별로 그룹화
+    # 💡 날짜별 -> 섹터별로 그룹화 (이전 내용은 하루 단위, 30분 단위는 그 시간대끼리 묶임)
     reports_by_date_and_cat = defaultdict(lambda: defaultdict(list))
     for rep in new_reports:
         reports_by_date_and_cat[rep['date']][rep['category']].append(rep)
@@ -235,15 +264,16 @@ async def main():
                     parse_mode=ParseMode.HTML, disable_web_page_preview=True
                 )
                 
-                # 성공적으로 전송한 리포트들의 URL을 기록에 추가
-                with open(RECORD_FILE, 'a', encoding='utf-8') as f:
+                # 성공적으로 전송한 리포트들의 URL과 제목을 기록에 추가
+                with open(RECORD_FILE, 'a', encoding='utf-8') as f_url, \
+                     open(TITLE_RECORD_FILE, 'a', encoding='utf-8') as f_title:
                     for rep in daily_cat_reports:
-                        f.write(f"{rep['link']}\n")
+                        f_url.write(f"{rep['link']}\n")
+                        f_title.write(f"{rep['title']}\n")
                         sent_urls.add(rep['link'])
+                        sent_titles.add(rep['title'])
                 
                 print(f"✅ [{target_date}] {category_name} 브리핑 전송 완료!")
-                
-                # 💡 수정됨: 발송 간 대기 시간을 20초에서 5초로 대폭 단축 (텔레그램 API 리밋 방지 최소 시간)
                 await asyncio.sleep(5) 
                 
             except Exception as e:
