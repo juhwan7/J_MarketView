@@ -5,9 +5,14 @@ on:
     branches:
       - main
   schedule:
-    # 매 30분마다 실행 (UTC 21:00은 한국 시간 오전 06:00입니다)
-    # 하루 종일 30분 간격으로 작동하게 하려면 아래와 같이 설정합니다.
-    - cron: '0,30 * * * *' 
+    # 1. 아침 집중 모니터링 모드 (한국 시간 06:17 ~ 08:47 / 30분 간격)
+    # UTC 기준: 21:17 ~ 23:47
+    - cron: '17,47 21-23 * * *'
+
+    # 2. 일반 시간 모드 (한국 시간 09:47 ~ 익일 05:47 / 2시간 간격)
+    # UTC 기준: 00:47 ~ 20:47 (매 2시간마다)
+    - cron: '47 0-20/2 * * *'
+    
   workflow_dispatch:
 
 jobs:
@@ -39,6 +44,7 @@ jobs:
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-      
-          git add sent_urls.txt sent_titles.txt
+          
+          # 파일이 존재할 때만 add 하도록 설정 (에러 방지)
+          git add sent_urls.txt sent_titles.txt || true
           git diff --quiet && git diff --staged --quiet || (git commit -m "Update sent urls and titles" && git push)
