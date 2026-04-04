@@ -50,7 +50,6 @@ def get_reports_by_category(category_name, url_path):
     reports_data = []
     
     today = datetime.datetime.now()
-    # 💡 최대 2일 전 자정(00시 00분)으로 기준점 설정
     two_days_ago = (today - datetime.timedelta(days=2)).replace(hour=0, minute=0, second=0, microsecond=0)
     
     for page in range(1, 10): 
@@ -75,7 +74,6 @@ def get_reports_by_category(category_name, url_path):
                     date_str = tds[d_idx].text.strip()
                     try:
                         report_date = datetime.datetime.strptime(date_str, '%y.%m.%d')
-                        # 2일 전보다 과거 데이터면 수집 즉시 중단
                         if report_date < two_days_ago:
                             return reports_data
                     except:
@@ -120,12 +118,13 @@ async def analyze_daily_category_reports(target_date, category_name, report_list
         for rep in report_list:
             content = await fetch_content(rep)
             content_snippet = content[:2500] 
-            combined_text += f"\n\n[제목: {rep['title']} (증권사: {rep['broker']})]\n내용: {content_snippet}"
+            # 💡 AI가 링크를 인식할 수 있도록 combined_text에 'link' 정보 추가
+            combined_text += f"\n\n[제목: {rep['title']} (증권사: {rep['broker']})]\n링크: {rep['link']}\n내용: {content_snippet}"
 
-        # 카테고리명에서 이모지 분리
         cat_emoji = category_name[0] if category_name else ""
         cat_text = category_name[1:].strip() if len(category_name) > 1 else category_name
 
+        # 💡 프롬프트 수정: <br> 태그 사용 절대 금지 및 링크 첨부 지시 추가
         system_prompt = (
             f"당신은 상위 1% 주식 투자자를 위한 전문 애널리스트입니다. "
             f"다음은 '{target_date}'에 수집된 [{cat_text}] 섹터의 신규 리포트 모음입니다. "
@@ -139,13 +138,13 @@ async def analyze_daily_category_reports(target_date, category_name, report_list
         [🚨 지침]
         1. 본문에 없는 내용은 지어내지 마세요.
         2. '간단명료하지만 깊이 있게' 작성하세요. (목표가, 영업이익률 등 수치 데이터 필수)
-        3. 💡 중복 처리: 여러 리포트가 비슷한 내용(예: 특정 종목 호실적)을 말한다면, 한 블록 안에 증권사들을 종합하여 서술하세요.
-        4. 💡 분리 처리: 서로 완전히 다른 주제의 리포트라면, 아래 [출력 형식] 블록 자체를 여러 개 생성하여 각각 분리해 주세요.
+        3. 중복 처리: 여러 리포트가 비슷한 내용을 말한다면, 한 블록 안에 증권사들을 종합하여 서술하세요.
+        4. 링크 추가: 각 분석 블록의 마지막에는 참고한 리포트의 원문 링크를 반드시 넣어주세요. (여러 개면 여러 개 모두 기재)
         
         [오늘 수집된 {cat_text} 본문 모음] 
         {combined_text}
         
-        [출력 형식 가이드라인] (HTML <b> 태그 활용, 리포트 주제가 여러 개라면 아래 블록 전체를 주제별로 반복 출력할 것)
+        [출력 형식 가이드라인] (HTML <b>, <a> 태그 활용, 리포트 주제가 여러 개라면 아래 블록 전체를 주제별로 반복 출력할 것. <br> 태그는 절대 사용 금지)
         
         {cat_emoji} <b>[{cat_text}] {target_date} (해당 리포트의 핵심 주제나 종목명) 분석</b>
         ━━━━━━━━━━━━━━━━━━━━
@@ -161,16 +160,25 @@ async def analyze_daily_category_reports(target_date, category_name, report_list
         <b>💡 [실전 투자 적용 포인트]</b>
         (해당 주제에 대한 단기/스윙 투자 스탠스 조언)
         
-        <br><br> (주제가 다를 경우 위 양식을 반복)
+        🔗 <a href="해당 리포트 원문 링크">원문 리포트 바로가기</a>
+        
+        (주제가 다를 경우 위 양식을 반복. 블록 사이는 엔터 2번으로 띄우고, HTML <br> 태그는 절대 사용하지 마세요.)
         """
         
         response = await asyncio.to_thread(model.generate_content, prompt)
         ai_text = response.text.replace('*', '•') 
         
+        # 💡 만약을 대비해 파이썬 단에서도 <br> 태그를 강제로 삭제
+        ai_text = ai_text.replace('<br>', '').replace('<br/>', '').replace('<br />', '')
+        
         # HTML 태그 이스케이프 방지 처리
         ai_text = ai_text.replace('<b>', '[[B]]').replace('</b>', '[[/B]]') 
+        ai_text = ai_text.replace('<a href="', '[[A]]').replace('">', '[[/A]]').replace('</a>', '[[/END_A]]')
+        
         ai_text = html.escape(ai_text) 
+        
         ai_text = ai_text.replace('[[B]]', '<b>').replace('[[/B]]', '</b>')
+        ai_text = ai_text.replace('[[A]]', '<a href="').replace('[[/A]]', '">').replace('[[/END_A]]', '</a>')
         
         message = (
             f"{ai_text}\n\n"
@@ -186,20 +194,16 @@ async def analyze_daily_category_reports(target_date, category_name, report_list
 # ==============================================================================
 # 4. 메인 실행 루틴
 # ==============================================================================
-# 💡 유사도 기준을 0.7에서 0.6으로 하향 조정
 def is_similar_title(new_date, new_title, sent_titles_list, threshold=0.6):
-    """새로운 리포트가 '같은 날짜'에 발송된 리포트와 유사한지 판별"""
     for old_item in sent_titles_list:
         try:
             old_date, old_title = old_item.split('|', 1)
         except ValueError:
             continue
             
-        # 날짜가 다르면 무조건 다른 리포트로 취급
         if new_date != old_date:
             continue
             
-        # 날짜가 같을 때만 제목 유사도 검사 진행
         similarity = difflib.SequenceMatcher(None, new_title, old_title).ratio()
         if similarity > threshold:
             return True
@@ -237,7 +241,6 @@ async def main():
         if rep['link'] in sent_urls:
             continue
         
-        # 💡 날짜를 포함하여 유사도 검사 진행
         if is_similar_title(rep['date'], rep['title'], sent_titles):
             print(f"🔄 [같은 날짜 중복 제외] {rep['date']} - {rep['title']}")
             sent_urls.add(rep['link']) 
@@ -274,7 +277,6 @@ async def main():
                     parse_mode=ParseMode.HTML, disable_web_page_preview=True
                 )
                 
-                # 💡 성공적으로 전송 후 기록할 때 '날짜|제목' 포맷으로 저장
                 with open(RECORD_FILE, 'a', encoding='utf-8') as f_url, \
                      open(TITLE_RECORD_FILE, 'a', encoding='utf-8') as f_title:
                     for rep in daily_cat_reports:
