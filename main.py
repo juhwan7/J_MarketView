@@ -13,7 +13,7 @@ import pdfplumber
 from io import BytesIO
 import datetime 
 from collections import defaultdict 
-import difflib # 유사도 분석을 위한 라이브러리 추가
+import difflib
 
 # ==============================================================================
 # 1. 설정 (GitHub Secrets 활용)
@@ -26,7 +26,7 @@ bot = Bot(token=TELEGRAM_TOKEN)
 genai.configure(api_key=GEMINI_API_KEY)
 model = genai.GenerativeModel('gemini-3.1-flash-lite-preview')
 RECORD_FILE = 'sent_urls.txt' 
-TITLE_RECORD_FILE = 'sent_titles.txt' # 제목 기반 유사도 중복 검사를 위한 파일 추가
+TITLE_RECORD_FILE = 'sent_titles.txt'
 
 # ==============================================================================
 # 2. 데이터 수집 함수
@@ -50,7 +50,6 @@ def get_reports_by_category(category_name, url_path):
     reports_data = []
     
     today = datetime.datetime.now()
-    # 💡 최대 2일 전 자정(00시 00분)으로 기준점 설정 (예: 4월 3일 -> 4월 1일 00:00)
     two_days_ago = (today - datetime.timedelta(days=2)).replace(hour=0, minute=0, second=0, microsecond=0)
     
     for page in range(1, 10): 
@@ -74,9 +73,7 @@ def get_reports_by_category(category_name, url_path):
                         
                     date_str = tds[d_idx].text.strip()
                     try:
-                        # 날짜 파싱 (YY.MM.DD 포맷)
                         report_date = datetime.datetime.strptime(date_str, '%y.%m.%d')
-                        # 💡 2일 전(two_days_ago)보다 과거 데이터면 수집 즉시 중단
                         if report_date < two_days_ago:
                             return reports_data
                     except:
@@ -123,11 +120,16 @@ async def analyze_daily_category_reports(target_date, category_name, report_list
             content_snippet = content[:2500] 
             combined_text += f"\n\n[제목: {rep['title']} (증권사: {rep['broker']})]\n내용: {content_snippet}"
 
-        # 💡 중복 내용을 하나로 묶고 필터링하도록 프롬프트 강력하게 수정
+        # 💡 카테고리명에서 이모지 분리 (예: '🌊 산업분석' -> 이모지 '🌊', 텍스트 '산업분석')
+        cat_emoji = category_name[0] if category_name else ""
+        cat_text = category_name[1:].strip() if len(category_name) > 1 else category_name
+
+        # 💡 프롬프트 전면 수정: 다른 주제는 강제로 분리하고, 대분류 타이틀을 맨 위로 올림
         system_prompt = (
             f"당신은 상위 1% 주식 투자자를 위한 전문 애널리스트입니다. "
-            f"다음은 '{target_date}'에 수집된 [{category_name}] 섹터의 신규 리포트 모음입니다. "
-            f"여러 증권사에서 동일한 기업이나 유사한 주제를 다룬 경우, 절대 중복해서 나열하지 말고 '하나의 주제'로 묶어서 요약하세요."
+            f"다음은 '{target_date}'에 수집된 [{cat_text}] 섹터의 신규 리포트 모음입니다. "
+            f"여러 증권사에서 동일한 기업이나 유사한 주제를 다룬 경우 '하나의 주제'로 묶어서 요약하세요. "
+            f"단, 완전히 다른 주제나 섹터의 리포트들은 억지로 묶지 말고, 개별적인 분석 블록으로 완전히 분리해서 작성하세요."
         )
 
         prompt = f"""
@@ -136,42 +138,43 @@ async def analyze_daily_category_reports(target_date, category_name, report_list
         [🚨 지침]
         1. 본문에 없는 내용은 지어내지 마세요.
         2. '간단명료하지만 깊이 있게' 작성하세요. (목표가, 영업이익률 등 수치 데이터 필수)
-        3. 💡 중복 처리: 여러 리포트가 비슷한 내용(예: 삼성전자 호실적)을 말한다면, 각 증권사의 의견을 한 항목 안에 종합하여 서술하고 개별적으로 중복 나열하지 마세요.
+        3. 💡 중복 처리: 여러 리포트가 비슷한 내용(예: 특정 종목 호실적)을 말한다면, 한 블록 안에 증권사들을 종합하여 서술하세요.
+        4. 💡 분리 처리: 서로 완전히 다른 주제의 리포트라면, 아래 [출력 형식] 블록 자체를 여러 개 생성하여 각각 분리해 주세요.
         
-        [오늘 수집된 {category_name} 본문 모음] 
+        [오늘 수집된 {cat_text} 본문 모음] 
         {combined_text}
         
-        [출력 형식 가이드라인] (HTML <b> 태그 활용)
+        [출력 형식 가이드라인] (HTML <b> 태그 활용, 리포트 주제가 여러 개라면 아래 블록 전체를 주제별로 반복 출력할 것)
         
-        <b>📊 [{target_date}] {category_name} 신규 리포트 브리핑</b>
+        {cat_emoji} <b>[{cat_text}] {target_date} (해당 리포트의 핵심 주제나 종목명) 분석</b>
+        ━━━━━━━━━━━━━━━━━━━━
         
-        <b>📝 [섹터 핵심 요약]</b>
-        (이 섹터 리포트들을 관통하는 가장 중요한 메시지 2~3줄)
+        <b>📝 [핵심 요약]</b>
+        (해당 주제를 관통하는 가장 중요한 메시지 2~3줄)
         
-        <b>🔍 [주요 리포트 심층 분석]</b>
-        (가장 중요하거나 눈에 띄는 리포트들을 선정, 비슷한 주제는 하나로 묶어서 분석)
-        - <b>(종목명 또는 핵심 주제)</b> : (관련 증권사명 모두 기재)
-          • 핵심 논리 : (왜 좋게/나쁘게 보는지 구체적 이유 종합)
-          • 중요 수치/전망 : (목표가 등 핵심 데이터)
-          
+        <b>🔍 [리포트 상세 분석]</b>
+        - <b>발행처</b> : (관련 증권사명 모두 기재)
+        - <b>핵심 논리</b> : (왜 좋게/나쁘게 보는지 구체적 이유 종합)
+        - <b>중요 수치/전망</b> : (목표가 등 핵심 데이터)
+        
         <b>💡 [실전 투자 적용 포인트]</b>
-        (단기/스윙 투자 스탠스 조언)
+        (해당 주제에 대한 단기/스윙 투자 스탠스 조언)
+        
+        <br><br> (주제가 다를 경우 위 양식을 반복)
         """
         
         response = await asyncio.to_thread(model.generate_content, prompt)
         ai_text = response.text.replace('*', '•') 
         
+        # HTML 태그 이스케이프 방지 처리
         ai_text = ai_text.replace('<b>', '[[B]]').replace('</b>', '[[/B]]') 
         ai_text = html.escape(ai_text) 
         ai_text = ai_text.replace('[[B]]', '<b>').replace('[[/B]]', '</b>')
         
+        # 💡 불필요한 J_MarketView 상단/하단 선 제거, 깔끔한 요약 알림 문구만 하단에 추가
         message = (
-            f"━━━━━━━━━━━━━━━━━━━━\n"
-            f"<b>📚 [J_MarketView] {category_name} 업데이트 분석</b>\n"
-            f"━━━━━━━━━━━━━━━━━━━━\n\n"
             f"{ai_text}\n\n"
-            f"<i>💡 총 {len(report_list)}개의 신규 리포트가 요약되었습니다.</i>\n"
-            f"━━━━━━━━━━━━━━━━━━━━"
+            f"<i>💡 총 {len(report_list)}개의 신규 리포트가 처리되었습니다.</i>"
         )
         return message
 
@@ -184,7 +187,6 @@ async def analyze_daily_category_reports(target_date, category_name, report_list
 # 4. 메인 실행 루틴
 # ==============================================================================
 def is_similar_title(new_title, sent_titles_list, threshold=0.7):
-    """새로운 제목이 이미 보낸 제목 리스트와 유사도가 높은지 판별"""
     for old_title in sent_titles_list:
         similarity = difflib.SequenceMatcher(None, new_title, old_title).ratio()
         if similarity > threshold:
@@ -202,13 +204,11 @@ async def main():
     
     print("🚀 [J_MarketView PRO] 신규 리포트 수집 및 요약을 시작합니다.")
 
-    # 파일 초기화
     if not os.path.exists(RECORD_FILE):
         open(RECORD_FILE, 'w', encoding='utf-8').close()
     if not os.path.exists(TITLE_RECORD_FILE):
         open(TITLE_RECORD_FILE, 'w', encoding='utf-8').close()
     
-    # 이미 전송한 리포트 URL & 제목 불러오기
     with open(RECORD_FILE, 'r', encoding='utf-8') as f:
         sent_urls = set(line.strip() for line in f if line.strip())
     with open(TITLE_RECORD_FILE, 'r', encoding='utf-8') as f:
@@ -220,15 +220,12 @@ async def main():
         reports = get_reports_by_category(cat_name, url_path)
         all_reports.extend(reports)
         
-    # 새로운 리포트만 필터링 (URL 중복 제거 및 제목 유사도 제거)
     new_reports = []
     for rep in all_reports:
         if rep['link'] in sent_urls:
             continue
-        # 이미 전송된 제목과 70% 이상 일치하면 제외 (중복 방지)
         if is_similar_title(rep['title'], sent_titles):
             print(f"🔄 중복/유사 제목 제외: {rep['title']}")
-            # URL만 기록해두어 다음 실행 시 불필요한 연산 방지
             sent_urls.add(rep['link']) 
             continue
             
@@ -238,7 +235,6 @@ async def main():
         print("📭 새로 추가된 리포트가 없습니다. 실행을 종료합니다.")
         return
 
-    # 💡 날짜별 -> 섹터별로 그룹화 (이전 내용은 하루 단위, 30분 단위는 그 시간대끼리 묶임)
     reports_by_date_and_cat = defaultdict(lambda: defaultdict(list))
     for rep in new_reports:
         reports_by_date_and_cat[rep['date']][rep['category']].append(rep)
@@ -264,7 +260,6 @@ async def main():
                     parse_mode=ParseMode.HTML, disable_web_page_preview=True
                 )
                 
-                # 성공적으로 전송한 리포트들의 URL과 제목을 기록에 추가
                 with open(RECORD_FILE, 'a', encoding='utf-8') as f_url, \
                      open(TITLE_RECORD_FILE, 'a', encoding='utf-8') as f_title:
                     for rep in daily_cat_reports:
