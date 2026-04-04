@@ -50,6 +50,7 @@ def get_reports_by_category(category_name, url_path):
     reports_data = []
     
     today = datetime.datetime.now()
+    # 💡 최대 2일 전 자정(00시 00분)으로 기준점 설정
     two_days_ago = (today - datetime.timedelta(days=2)).replace(hour=0, minute=0, second=0, microsecond=0)
     
     for page in range(1, 10): 
@@ -74,6 +75,7 @@ def get_reports_by_category(category_name, url_path):
                     date_str = tds[d_idx].text.strip()
                     try:
                         report_date = datetime.datetime.strptime(date_str, '%y.%m.%d')
+                        # 2일 전보다 과거 데이터면 수집 즉시 중단
                         if report_date < two_days_ago:
                             return reports_data
                     except:
@@ -120,11 +122,10 @@ async def analyze_daily_category_reports(target_date, category_name, report_list
             content_snippet = content[:2500] 
             combined_text += f"\n\n[제목: {rep['title']} (증권사: {rep['broker']})]\n내용: {content_snippet}"
 
-        # 💡 카테고리명에서 이모지 분리 (예: '🌊 산업분석' -> 이모지 '🌊', 텍스트 '산업분석')
+        # 카테고리명에서 이모지 분리
         cat_emoji = category_name[0] if category_name else ""
         cat_text = category_name[1:].strip() if len(category_name) > 1 else category_name
 
-        # 💡 프롬프트 전면 수정: 다른 주제는 강제로 분리하고, 대분류 타이틀을 맨 위로 올림
         system_prompt = (
             f"당신은 상위 1% 주식 투자자를 위한 전문 애널리스트입니다. "
             f"다음은 '{target_date}'에 수집된 [{cat_text}] 섹터의 신규 리포트 모음입니다. "
@@ -171,7 +172,6 @@ async def analyze_daily_category_reports(target_date, category_name, report_list
         ai_text = html.escape(ai_text) 
         ai_text = ai_text.replace('[[B]]', '<b>').replace('[[/B]]', '</b>')
         
-        # 💡 불필요한 J_MarketView 상단/하단 선 제거, 깔끔한 요약 알림 문구만 하단에 추가
         message = (
             f"{ai_text}\n\n"
             f"<i>💡 총 {len(report_list)}개의 신규 리포트가 처리되었습니다.</i>"
@@ -186,8 +186,20 @@ async def analyze_daily_category_reports(target_date, category_name, report_list
 # ==============================================================================
 # 4. 메인 실행 루틴
 # ==============================================================================
-def is_similar_title(new_title, sent_titles_list, threshold=0.7):
-    for old_title in sent_titles_list:
+# 💡 유사도 기준을 0.7에서 0.6으로 하향 조정
+def is_similar_title(new_date, new_title, sent_titles_list, threshold=0.6):
+    """새로운 리포트가 '같은 날짜'에 발송된 리포트와 유사한지 판별"""
+    for old_item in sent_titles_list:
+        try:
+            old_date, old_title = old_item.split('|', 1)
+        except ValueError:
+            continue
+            
+        # 날짜가 다르면 무조건 다른 리포트로 취급
+        if new_date != old_date:
+            continue
+            
+        # 날짜가 같을 때만 제목 유사도 검사 진행
         similarity = difflib.SequenceMatcher(None, new_title, old_title).ratio()
         if similarity > threshold:
             return True
@@ -224,8 +236,10 @@ async def main():
     for rep in all_reports:
         if rep['link'] in sent_urls:
             continue
-        if is_similar_title(rep['title'], sent_titles):
-            print(f"🔄 중복/유사 제목 제외: {rep['title']}")
+        
+        # 💡 날짜를 포함하여 유사도 검사 진행
+        if is_similar_title(rep['date'], rep['title'], sent_titles):
+            print(f"🔄 [같은 날짜 중복 제외] {rep['date']} - {rep['title']}")
             sent_urls.add(rep['link']) 
             continue
             
@@ -260,13 +274,17 @@ async def main():
                     parse_mode=ParseMode.HTML, disable_web_page_preview=True
                 )
                 
+                # 💡 성공적으로 전송 후 기록할 때 '날짜|제목' 포맷으로 저장
                 with open(RECORD_FILE, 'a', encoding='utf-8') as f_url, \
                      open(TITLE_RECORD_FILE, 'a', encoding='utf-8') as f_title:
                     for rep in daily_cat_reports:
                         f_url.write(f"{rep['link']}\n")
-                        f_title.write(f"{rep['title']}\n")
+                        
+                        date_title_str = f"{rep['date']}|{rep['title']}"
+                        f_title.write(f"{date_title_str}\n")
+                        
                         sent_urls.add(rep['link'])
-                        sent_titles.add(rep['title'])
+                        sent_titles.add(date_title_str)
                 
                 print(f"✅ [{target_date}] {category_name} 브리핑 전송 완료!")
                 await asyncio.sleep(5) 
