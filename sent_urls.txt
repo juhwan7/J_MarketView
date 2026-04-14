@@ -886,3 +886,4 @@ https://finance.naver.com/research/invest_read.naver?nid=38530&page=1
 https://finance.naver.com/research/invest_read.naver?nid=38529&page=1
 https://finance.naver.com/research/invest_read.naver?nid=38528&page=1
 https://finance.naver.com/research/invest_read.naver?nid=38527&page=1
+https://finance.naver.com/research/invest_read.naver?nid=38535&page=1
