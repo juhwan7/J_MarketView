@@ -1412,3 +1412,5 @@ https://finance.naver.com/research/company_read.naver?nid=91772&page=1
 https://finance.naver.com/research/company_read.naver?nid=91771&page=2
 https://finance.naver.com/research/company_read.naver?nid=91770&page=2
 https://finance.naver.com/research/company_read.naver?nid=91769&page=2
+https://finance.naver.com/research/company_read.naver?nid=91802&page=1
+https://finance.naver.com/research/market_info_read.naver?nid=35804&page=1
