@@ -1614,3 +1614,11 @@ https://finance.naver.com/research/invest_read.naver?nid=38642&page=1
 https://finance.naver.com/research/invest_read.naver?nid=38641&page=1
 https://finance.naver.com/research/invest_read.naver?nid=38640&page=1
 https://finance.naver.com/research/invest_read.naver?nid=38639&page=1
+https://finance.naver.com/research/economy_read.naver?nid=13262&page=1
+https://finance.naver.com/research/economy_read.naver?nid=13261&page=1
+https://finance.naver.com/research/industry_read.naver?nid=44332&page=1
+https://finance.naver.com/research/industry_read.naver?nid=44331&page=1
+https://finance.naver.com/research/industry_read.naver?nid=44330&page=1
+https://finance.naver.com/research/industry_read.naver?nid=44329&page=1
+https://finance.naver.com/research/industry_read.naver?nid=44328&page=1
+https://finance.naver.com/research/industry_read.naver?nid=44327&page=1
