@@ -2006,3 +2006,8 @@ https://finance.naver.com/research/company_read.naver?nid=92097&page=3
 https://finance.naver.com/research/market_info_read.naver?nid=35895&page=1
 https://finance.naver.com/research/market_info_read.naver?nid=35894&page=1
 https://finance.naver.com/research/invest_read.naver?nid=38694&page=1
+https://finance.naver.com/research/industry_read.naver?nid=44379&page=1
+https://finance.naver.com/research/industry_read.naver?nid=44378&page=1
+https://finance.naver.com/research/industry_read.naver?nid=44377&page=1
+https://finance.naver.com/research/company_read.naver?nid=92170&page=1
+https://finance.naver.com/research/invest_read.naver?nid=38695&page=1
