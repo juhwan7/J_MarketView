@@ -2011,3 +2011,12 @@ https://finance.naver.com/research/industry_read.naver?nid=44378&page=1
 https://finance.naver.com/research/industry_read.naver?nid=44377&page=1
 https://finance.naver.com/research/company_read.naver?nid=92170&page=1
 https://finance.naver.com/research/invest_read.naver?nid=38695&page=1
+https://finance.naver.com/research/industry_read.naver?nid=44380&page=1
+https://finance.naver.com/research/company_read.naver?nid=92174&page=1
+https://finance.naver.com/research/company_read.naver?nid=92173&page=1
+https://finance.naver.com/research/company_read.naver?nid=92172&page=1
+https://finance.naver.com/research/company_read.naver?nid=92171&page=1
+https://finance.naver.com/research/market_info_read.naver?nid=35897&page=1
+https://finance.naver.com/research/market_info_read.naver?nid=35896&page=1
+https://finance.naver.com/research/invest_read.naver?nid=38697&page=1
+https://finance.naver.com/research/invest_read.naver?nid=38696&page=1
