@@ -3080,3 +3080,4 @@ https://finance.naver.com/research/market_info_read.naver?nid=36028&page=1
 https://finance.naver.com/research/invest_read.naver?nid=38828&page=1
 https://finance.naver.com/research/invest_read.naver?nid=38827&page=1
 https://finance.naver.com/research/invest_read.naver?nid=38826&page=1
+https://finance.naver.com/research/invest_read.naver?nid=38829&page=1
