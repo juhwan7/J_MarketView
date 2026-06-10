@@ -4741,3 +4741,4 @@ https://finance.naver.com/research/invest_read.naver?nid=39134&page=1
 https://finance.naver.com/research/invest_read.naver?nid=39133&page=1
 https://finance.naver.com/research/invest_read.naver?nid=39132&page=1
 https://finance.naver.com/research/market_info_read.naver?nid=36334&page=1
+https://finance.naver.com/research/company_read.naver?nid=93487&page=1
