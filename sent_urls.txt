@@ -5325,3 +5325,4 @@ https://finance.naver.com/research/invest_read.naver?nid=39261&page=1
 https://finance.naver.com/research/invest_read.naver?nid=39260&page=1
 https://finance.naver.com/research/invest_read.naver?nid=39258&page=1
 https://finance.naver.com/research/invest_read.naver?nid=39257&page=1
+https://finance.naver.com/research/market_info_read.naver?nid=36478&page=1
