@@ -6024,3 +6024,16 @@ https://finance.naver.com/research/industry_read.naver?nid=45172&page=1
 https://finance.naver.com/research/industry_read.naver?nid=45171&page=1
 https://finance.naver.com/research/industry_read.naver?nid=45170&page=1
 https://finance.naver.com/research/industry_read.naver?nid=45169&page=1
+https://finance.naver.com/research/economy_read.naver?nid=13522&page=1
+https://finance.naver.com/research/economy_read.naver?nid=13521&page=1
+https://finance.naver.com/research/industry_read.naver?nid=45185&page=1
+https://finance.naver.com/research/industry_read.naver?nid=45184&page=1
+https://finance.naver.com/research/company_read.naver?nid=93880&page=1
+https://finance.naver.com/research/company_read.naver?nid=93879&page=1
+https://finance.naver.com/research/company_read.naver?nid=93878&page=1
+https://finance.naver.com/research/company_read.naver?nid=93877&page=1
+https://finance.naver.com/research/market_info_read.naver?nid=36633&page=1
+https://finance.naver.com/research/market_info_read.naver?nid=36632&page=1
+https://finance.naver.com/research/market_info_read.naver?nid=36631&page=1
+https://finance.naver.com/research/invest_read.naver?nid=39434&page=1
+https://finance.naver.com/research/invest_read.naver?nid=39433&page=1
