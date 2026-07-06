@@ -6141,3 +6141,4 @@ https://finance.naver.com/research/invest_read.naver?nid=39452&page=1
 https://finance.naver.com/research/invest_read.naver?nid=39451&page=1
 https://finance.naver.com/research/invest_read.naver?nid=39450&page=1
 https://finance.naver.com/research/invest_read.naver?nid=39449&page=1
+https://finance.naver.com/research/industry_read.naver?nid=45216&page=1
