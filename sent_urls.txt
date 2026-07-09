@@ -6402,3 +6402,5 @@ https://finance.naver.com/research/invest_read.naver?nid=39496&page=1
 https://finance.naver.com/research/invest_read.naver?nid=39495&page=1
 https://finance.naver.com/research/invest_read.naver?nid=39494&page=1
 https://finance.naver.com/research/invest_read.naver?nid=39493&page=1
+https://finance.naver.com/research/industry_read.naver?nid=45261&page=1
+https://finance.naver.com/research/market_info_read.naver?nid=36697&page=1
