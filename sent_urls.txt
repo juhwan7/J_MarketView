@@ -6501,3 +6501,4 @@ https://finance.naver.com/research/invest_read.naver?nid=39515&page=1
 https://finance.naver.com/research/invest_read.naver?nid=39514&page=1
 https://finance.naver.com/research/invest_read.naver?nid=39513&page=1
 https://finance.naver.com/research/invest_read.naver?nid=39512&page=1
+https://finance.naver.com/research/invest_read.naver?nid=39518&page=1
