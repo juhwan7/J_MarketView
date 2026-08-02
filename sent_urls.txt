@@ -8031,3 +8031,11 @@ https://finance.naver.com/research/company_read.naver?nid=94851&page=3
 https://finance.naver.com/research/company_read.naver?nid=94850&page=3
 https://finance.naver.com/research/invest_read.naver?nid=39756&page=1
 https://finance.naver.com/research/invest_read.naver?nid=39755&page=1
+https://finance.naver.com/research/economy_read.naver?nid=13628&page=1
+https://finance.naver.com/research/industry_read.naver?nid=45516&page=1
+https://finance.naver.com/research/company_read.naver?nid=94929&page=1
+https://finance.naver.com/research/company_read.naver?nid=94928&page=1
+https://finance.naver.com/research/market_info_read.naver?nid=36988&page=1
+https://finance.naver.com/research/market_info_read.naver?nid=36987&page=1
+https://finance.naver.com/research/invest_read.naver?nid=39758&page=1
+https://finance.naver.com/research/invest_read.naver?nid=39757&page=1
