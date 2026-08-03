@@ -8188,3 +8188,4 @@ https://finance.naver.com/research/invest_read.naver?nid=39765&page=1
 https://finance.naver.com/research/invest_read.naver?nid=39764&page=1
 https://finance.naver.com/research/invest_read.naver?nid=39763&page=1
 https://finance.naver.com/research/invest_read.naver?nid=39762&page=1
+https://finance.naver.com/research/industry_read.naver?nid=45545&page=1
