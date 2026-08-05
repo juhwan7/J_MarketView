@@ -8356,3 +8356,7 @@ https://finance.naver.com/research/invest_read.naver?nid=39791&page=1
 https://finance.naver.com/research/invest_read.naver?nid=39790&page=1
 https://finance.naver.com/research/invest_read.naver?nid=39789&page=1
 https://finance.naver.com/research/invest_read.naver?nid=39788&page=1
+https://finance.naver.com/research/company_read.naver?nid=95087&page=1
+https://finance.naver.com/research/company_read.naver?nid=95086&page=1
+https://finance.naver.com/research/company_read.naver?nid=95085&page=1
+https://finance.naver.com/research/market_info_read.naver?nid=37030&page=1
