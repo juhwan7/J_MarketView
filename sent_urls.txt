@@ -8514,3 +8514,4 @@ https://finance.naver.com/research/invest_read.naver?nid=39817&page=1
 https://finance.naver.com/research/invest_read.naver?nid=39816&page=1
 https://finance.naver.com/research/invest_read.naver?nid=39815&page=1
 https://finance.naver.com/research/invest_read.naver?nid=39814&page=1
+https://finance.naver.com/research/company_read.naver?nid=95189&page=1
