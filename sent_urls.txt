@@ -8655,3 +8655,4 @@ https://finance.naver.com/research/invest_read.naver?nid=39836&page=1
 https://finance.naver.com/research/invest_read.naver?nid=39835&page=1
 https://finance.naver.com/research/invest_read.naver?nid=39834&page=1
 https://finance.naver.com/research/invest_read.naver?nid=39833&page=1
+https://finance.naver.com/research/company_read.naver?nid=95281&page=1
