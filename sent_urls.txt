@@ -9151,3 +9151,4 @@ https://finance.naver.com/research/market_info_read.naver?nid=37133&page=1
 https://finance.naver.com/research/invest_read.naver?nid=39893&page=1
 https://finance.naver.com/research/invest_read.naver?nid=39892&page=1
 https://finance.naver.com/research/market_info_read.naver?nid=37137&page=1
+https://finance.naver.com/research/market_info_read.naver?nid=37138&page=1
