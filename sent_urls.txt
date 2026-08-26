@@ -9870,3 +9870,4 @@ https://finance.naver.com/research/invest_read.naver?nid=40006&page=1
 https://finance.naver.com/research/invest_read.naver?nid=40005&page=1
 https://finance.naver.com/research/invest_read.naver?nid=40004&page=1
 https://finance.naver.com/research/invest_read.naver?nid=40003&page=1
+https://finance.naver.com/research/market_info_read.naver?nid=37279&page=1
