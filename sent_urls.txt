@@ -10382,3 +10382,4 @@ https://finance.naver.com/research/invest_read.naver?nid=40099&page=1
 https://finance.naver.com/research/invest_read.naver?nid=40098&page=1
 https://finance.naver.com/research/invest_read.naver?nid=40097&page=1
 https://finance.naver.com/research/invest_read.naver?nid=40096&page=1
+https://finance.naver.com/research/invest_read.naver?nid=40104&page=1
