@@ -10529,3 +10529,13 @@ https://finance.naver.com/research/invest_read.naver?nid=40132&page=1
 https://finance.naver.com/research/invest_read.naver?nid=40131&page=1
 https://finance.naver.com/research/invest_read.naver?nid=40130&page=1
 https://finance.naver.com/research/invest_read.naver?nid=40129&page=1
+https://finance.naver.com/research/market_info_read.naver?nid=37436&page=1
+https://finance.naver.com/research/market_info_read.naver?nid=37435&page=1
+https://finance.naver.com/research/market_info_read.naver?nid=37434&page=1
+https://finance.naver.com/research/market_info_read.naver?nid=37433&page=1
+https://finance.naver.com/research/market_info_read.naver?nid=37432&page=1
+https://finance.naver.com/research/market_info_read.naver?nid=37431&page=1
+https://finance.naver.com/research/market_info_read.naver?nid=37430&page=1
+https://finance.naver.com/research/invest_read.naver?nid=40138&page=1
+https://finance.naver.com/research/invest_read.naver?nid=40137&page=1
+https://finance.naver.com/research/invest_read.naver?nid=40136&page=1
